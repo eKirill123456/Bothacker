@@ -1,0 +1,156 @@
+// ============ ТАБЛИЦА ЛИДЕРОВ ============
+
+// Структура данных для лидеров
+let leaders = [];
+let currentTelegramUser = null;
+
+// Инициализация Telegram данных
+function initTelegramData() {
+    if (window.Telegram && window.Telegram.WebApp) {
+        const tg = window.Telegram.WebApp;
+        const user = tg.initDataUnsafe?.user;
+        
+        if (user) {
+            currentTelegramUser = {
+                id: user.id,
+                username: user.username || `${user.first_name} ${user.last_name || ''}`.trim(),
+                first_name: user.first_name,
+                last_name: user.last_name
+            };
+            console.log('Telegram user loaded:', currentTelegramUser);
+            return currentTelegramUser;
+        }
+    }
+    return null;
+}
+
+// Получить имя пользователя из Telegram
+function getTelegramUsername() {
+    if (currentTelegramUser) {
+        return currentTelegramUser.username || 
+               `${currentTelegramUser.first_name} ${currentTelegramUser.last_name || ''}`.trim();
+    }
+    return 'GUEST_' + Math.floor(Math.random() * 1000);
+}
+
+// Загружаем лидеров из localStorage
+function loadLeaders() {
+    const saved = localStorage.getItem('hackerLeaders');
+    if (saved) {
+        try {
+            leaders = JSON.parse(saved);
+        } catch (e) {
+            console.error('Ошибка загрузки лидеров:', e);
+            leaders = [];
+        }
+    } else {
+        // Создаем тестовых лидеров для демонстрации
+        leaders = [
+            { id: '1', name: 'ShadowMaster', level: 42, servers: 1337, wins: 89, btc: 50000, tg_id: 'tg1' },
+            { id: '2', name: 'NeoCoder', level: 38, servers: 954, wins: 76, btc: 35000, tg_id: 'tg2' },
+            { id: '3', name: 'DarkWizard', level: 35, servers: 821, wins: 62, btc: 28000, tg_id: 'tg3' },
+            { id: '4', name: 'CyberGhost', level: 31, servers: 743, wins: 55, btc: 21000, tg_id: 'tg4' },
+            { id: '5', name: 'PhantomSec', level: 28, servers: 612, wins: 48, btc: 15000, tg_id: 'tg5' }
+        ];
+        saveLeaders();
+    }
+    return leaders;
+}
+
+// Сохраняем лидеров
+function saveLeaders() {
+    localStorage.setItem('hackerLeaders', JSON.stringify(leaders));
+}
+
+// Добавляем нового игрока в таблицу лидеров
+function addToLeaderboard(playerId, name, level, servers, wins, btc) {
+    // Проверяем, есть ли уже игрок с таким ID
+    const existingIndex = leaders.findIndex(l => l.id === playerId);
+    
+    const newEntry = {
+        id: playerId,
+        name: name,
+        level: level,
+        servers: servers,
+        wins: wins,
+        btc: btc
+    };
+    
+    if (existingIndex >= 0) {
+        // Обновляем существующего игрока
+        leaders[existingIndex] = newEntry;
+    } else {
+        // Добавляем нового игрока
+        leaders.push(newEntry);
+    }
+    
+    // Сортируем по биткоинам (убывание)
+    leaders.sort((a, b) => b.btc - a.btc);
+    
+    // Оставляем только топ-50
+    if (leaders.length > 50) {
+        leaders = leaders.slice(0, 50);
+    }
+    
+    saveLeaders();
+    return leaders;
+}
+
+// Получаем топ игроков (топ-50)
+function getTopLeaders(limit = 50) {
+    return leaders.slice(0, limit);
+}
+
+// Получаем ранг игрока по ID
+function getPlayerRank(playerId) {
+    const index = leaders.findIndex(l => l.id === playerId);
+    return index >= 0 ? index + 1 : null;
+}
+
+// Обновляем статистику игрока
+function updatePlayerStats(playerId, name, level, servers, wins, btc) {
+    return addToLeaderboard(playerId, name, level, servers, wins, btc);
+}
+
+// Очищаем таблицу лидеров (только для теста)
+function clearLeaderboard() {
+    if (confirm('Точно очистить таблицу лидеров?')) {
+        leaders = [];
+        saveLeaders();
+        return true;
+    }
+    return false;
+}
+
+// Получить ID текущего игрока
+function getCurrentPlayerId() {
+    if (currentTelegramUser) {
+        return 'tg_' + currentTelegramUser.id;
+    }
+    // Для гостей создаем ID на основе localStorage
+    let guestId = localStorage.getItem('guestId');
+    if (!guestId) {
+        guestId = 'guest_' + Math.random().toString(36).substr(2, 9);
+        localStorage.setItem('guestId', guestId);
+    }
+    return guestId;
+}
+
+// Экспортируем функции
+window.leaderboardAPI = {
+    initTelegramData,
+    getTelegramUsername,
+    getCurrentPlayerId,
+    loadLeaders,
+    saveLeaders,
+    addToLeaderboard,
+    getTopLeaders,
+    getPlayerRank,
+    updatePlayerStats,
+    clearLeaderboard
+};
+
+// Автоматическая инициализация
+document.addEventListener('DOMContentLoaded', function() {
+    window.leaderboardAPI.initTelegramData();
+});

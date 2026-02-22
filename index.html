@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>HACKER'S TERMINAL</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+    <div id="game-container">
+        <div class="terminal-header">
+            <span>🔴 HACKER'S TERMINAL v3.0</span>
+            <div class="status-led"></div>
+        </div>
+
+        <!-- Основная статистика -->
+        <div class="stats-panel">
+            <div class="stat-item">
+                <span>💰 БИТКОИНЫ:</span>
+                <span class="stat-value" id="bitcoin-amount">0</span>
+            </div>
+            <div class="stat-item">
+                <span>💻 ВЗЛОМАНО:</span>
+                <span class="stat-value" id="servers-hacked">0</span>
+            </div>
+            <div class="stat-item">
+                <span>⚡ МОЩНОСТЬ:</span>
+                <span class="stat-value" id="hack-power">1</span>
+            </div>
+            <div class="stat-item">
+                <span>🏆 РЕЙТИНГ:</span>
+                <span class="stat-value" id="player-rank">#???</span>
+            </div>
+        </div>
+
+        <!-- Информация о пользователе Telegram -->
+        <div class="telegram-user-info" id="telegram-user-info">
+            <span class="user-icon">👤</span>
+            <span class="user-name" id="telegram-username">Загрузка...</span>
+        </div>
+
+        <!-- Переключатель режимов -->
+        <div class="mode-selector" id="mode-selector">
+            <button class="mode-btn active" onclick="switchMode('clicker')" id="mode-clicker">
+                <span>💻</span> ВЗЛОМ
+            </button>
+            <button class="mode-btn" onclick="switchMode('arena')" id="mode-arena">
+                <span>⚔️</span> АРЕНА
+            </button>
+            <button class="mode-btn" onclick="switchMode('leaderboard')" id="mode-leaderboard">
+                <span>🏆</span> ТОП-50
+            </button>
+        </div>
+
+        <!-- РЕЖИМ КЛИКЕРА -->
+        <div id="clicker-mode">
+            <!-- Индикатор безопасности -->
+            <div class="security-panel">
+                <div class="security-header">
+                    <span>🛡️ УРОВЕНЬ БЕЗОПАСНОСТИ</span>
+                    <span class="security-level" id="security-level">СРЕДНИЙ</span>
+                </div>
+                <div class="security-bar">
+                    <div class="security-fill" id="security-fill" style="width: 50%"></div>
+                </div>
+                <div class="security-warning" id="security-warning">
+                    ⚠️ Внимание! Система следит за тобой
+                </div>
+            </div>
+
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+
+            <div class="message-box" id="message-box">
+                > Система инициализирована... Готов к взлому
+            </div>
+
+            <div class="click-area">
+                <button class="hack-button" onclick="handleHack()">ВЗЛОМАТЬ</button>
+            </div>
+
+            <div class="upgrades-panel">
+                <div class="panel-title">⚡ УЛУЧШЕНИЯ ⚡</div>
+                
+                <div class="upgrade-item" onclick="buyUpgrade('power')">
+                    <div class="upgrade-info">
+                        <div class="upgrade-name">🔧 Мощность взлома</div>
+                        <div class="upgrade-desc">+1 к мощности взлома</div>
+                        <div class="upgrade-level" id="power-level">Уровень: 1/20</div>
+                    </div>
+                    <div class="upgrade-price" id="power-price">10</div>
+                </div>
+
+                <div class="upgrade-item" onclick="buyUpgrade('stealth')">
+                    <div class="upgrade-info">
+                        <div class="upgrade-name">🕵️ Скрытность</div>
+                        <div class="upgrade-desc">-2% к риску быть пойманным</div>
+                        <div class="upgrade-level" id="stealth-level">Уровень: 1/20</div>
+                    </div>
+                    <div class="upgrade-price" id="stealth-price">25</div>
+                </div>
+
+                <div class="upgrade-item" onclick="buyUpgrade('auto')">
+                    <div class="upgrade-info">
+                        <div class="upgrade-name">⚙️ Автоматический взломщик</div>
+                        <div class="upgrade-desc">Автоматически взламывает каждые 10 сек</div>
+                    </div>
+                    <div class="upgrade-price" id="auto-price">50</div>
+                </div>
+
+                <div class="upgrade-item" onclick="buyUpgrade('multiplier')">
+                    <div class="upgrade-info">
+                        <div class="upgrade-name">🎯 Критический взлом</div>
+                        <div class="upgrade-desc">Шанс x2 урона</div>
+                        <div class="upgrade-level" id="multiplier-level">Уровень: 1/15</div>
+                    </div>
+                    <div class="upgrade-price" id="multiplier-price">75</div>
+                </div>
+            </div>
+
+            <div class="assistants-panel">
+                <div class="panel-title">🤖 ПОМОЩНИКИ 🤖</div>
+                
+                <div class="upgrade-item" onclick="hireAssistant('miner')">
+                    <div class="upgrade-info">
+                        <div class="upgrade-name">⛏️ Крипто-майнер</div>
+                        <div class="upgrade-desc">+0.5 BTC/сек</div>
+                        <div class="upgrade-level">Нанято: <span id="miner-count">0</span>/10</div>
+                    </div>
+                    <div class="upgrade-price" id="miner-price">30</div>
+                </div>
+
+                <div class="upgrade-item" onclick="hireAssistant('hacker')">
+                    <div class="upgrade-info">
+                        <div class="upgrade-name">👨‍💻 Хакер</div>
+                        <div class="upgrade-desc">+1 к мощности взлома</div>
+                        <div class="upgrade-level">Нанято: <span id="hacker-count">0</span>/8</div>
+                    </div>
+                    <div class="upgrade-price" id="hacker-price">60</div>
+                </div>
+
+                <div class="upgrade-item" onclick="hireAssistant('ai')">
+                    <div class="upgrade-info">
+                        <div class="upgrade-name">🧠 ИИ-помощник</div>
+                        <div class="upgrade-desc">+2 к мощности и +1 BTC/сек</div>
+                        <div class="upgrade-level">Нанято: <span id="ai-count">0</span>/5</div>
+                    </div>
+                    <div class="upgrade-price" id="ai-price">150</div>
+                </div>
+
+                <div class="upgrade-item" onclick="hireAssistant('cloak')">
+                    <div class="upgrade-info">
+                        <div class="upgrade-name">👻 Цифровой призрак</div>
+                        <div class="upgrade-desc">-3% к риску и +1 к скрытности</div>
+                        <div class="upgrade-level">Нанято: <span id="cloak-count">0</span>/5</div>
+                    </div>
+                    <div class="upgrade-price" id="cloak-price">200</div>
+                </div>
+            </div>
+
+            <!-- Индикатор открытия арены -->
+            <div class="arena-unlock" id="arena-unlock">
+                <div class="unlock-progress">
+                    <span>🔓 ОТКРЫТИЕ АРЕНЫ:</span>
+                    <span id="unlock-status">0/1000 BTC</span>
+                </div>
+                <div class="progress-bar small">
+                    <div class="progress-fill" id="unlock-progress-fill" style="width: 0%"></div>
+                </div>
+                <div class="unlock-desc">Накопи 1000 BTC чтобы открыть PVP арену</div>
+            </div>
+        </div>
+
+        <!-- PVP АРЕНА -->
+        <div id="arena-mode" class="hidden">
+            <div class="arena-header">
+                <span>⚔️ PVP АРЕНА - ВЗЛОМ ЧУЖОГО СЕРВЕРА ⚔️</span>
+            </div>
+
+            <!-- Выбор сложности -->
+            <div class="difficulty-selector">
+                <div class="difficulty-label">ВЫБЕРИ СЛОЖНОСТЬ ЦЕЛИ:</div>
+                <div class="difficulty-buttons">
+                    <button class="difficulty-btn easy active" onclick="selectDifficulty('easy')">
+                        <span>🟢</span> ЛЕГКО
+                        <div class="difficulty-desc">x1.5 профита, шанс 80%</div>
+                    </button>
+                    <button class="difficulty-btn medium" onclick="selectDifficulty('medium')">
+                        <span>🟡</span> СРЕДНЕ
+                        <div class="difficulty-desc">x2 профита, шанс 50%</div>
+                    </button>
+                    <button class="difficulty-btn hard" onclick="selectDifficulty('hard')">
+                        <span>🔴</span> СЛОЖНО
+                        <div class="difficulty-desc">x3 профита, шанс 30%</div>
+                    </button>
+                    <button class="difficulty-btn insane" onclick="selectDifficulty('insane')">
+                        <span>💀</span> БЕЗУМИЕ
+                        <div class="difficulty-desc">x5 профита, шанс 10%</div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Ввод ставки -->
+            <div class="bet-section">
+                <div class="bet-label">💰 СДЕЛАЙ СТАВКУ (минимум 100 BTC):</div>
+                <div class="bet-controls">
+                    <input type="range" id="bet-slider" min="100" max="5000" value="500" step="50" oninput="updateBetValue()">
+                    <div class="bet-value-display">
+                        <span id="bet-amount">500</span> BTC
+                    </div>
+                </div>
+                <div class="bet-presets">
+                    <button class="bet-preset" onclick="setBet(100)">100</button>
+                    <button class="bet-preset" onclick="setBet(500)">500</button>
+                    <button class="bet-preset" onclick="setBet(1000)">1000</button>
+                    <button class="bet-preset" onclick="setBet(2500)">2500</button>
+                    <button class="bet-preset" onclick="setBet(5000)">5000</button>
+                </div>
+            </div>
+
+            <!-- Информация о цели -->
+            <div class="target-info">
+                <div class="target-header">
+                    <span class="target-name" id="target-name">🔍 ПОИСК ЦЕЛИ...</span>
+                    <span class="target-rating" id="target-rating">????</span>
+                </div>
+                <div class="target-stats">
+                    <div class="target-stat">
+                        <span>Защита:</span>
+                        <span id="target-defense">??</span>
+                    </div>
+                    <div class="target-stat">
+                        <span>Награда:</span>
+                        <span id="target-reward">??</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Кнопка атаки -->
+            <button class="arena-button" onclick="startArenaHack()" id="arena-button">
+                💀 НАЧАТЬ ВЗЛОМ 💀
+            </button>
+
+            <!-- Прогресс взлома -->
+            <div class="hack-progress hidden" id="hack-progress">
+                <div class="progress-label">ВЗЛОМ... <span id="hack-percent">0%</span></div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="hack-progress-fill" style="width: 0%"></div>
+                </div>
+                <div class="hack-log" id="hack-log">
+                    > Инициализация взлома...
+                </div>
+            </div>
+
+            <!-- Магазин предметов -->
+            <div class="shop-panel">
+                <div class="panel-title">🛒 МАГАЗИН ХАКЕРА 🛒</div>
+                
+                <div class="shop-grid">
+                    <div class="shop-item" onclick="buyItem('firewall')">
+                        <div class="item-icon">🛡️</div>
+                        <div class="item-name">ФАЙРВОЛЛ</div>
+                        <div class="item-desc">-2 к защите цели</div>
+                        <div class="item-price" id="firewall-price">100</div>
+                        <div class="item-count" id="firewall-count">0</div>
+                    </div>
+
+                    <div class="shop-item" onclick="buyItem('exploit')">
+                        <div class="item-icon">💻</div>
+                        <div class="item-name">ЭКСПЛОИТ</div>
+                        <div class="item-desc">+30% к урону</div>
+                        <div class="item-price" id="exploit-price">150</div>
+                        <div class="item-count" id="exploit-count">0</div>
+                    </div>
+
+                    <div class="shop-item" onclick="buyItem('virus')">
+                        <div class="item-icon">🦠</div>
+                        <div class="item-name">ВИРУС</div>
+                        <div class="item-desc">Отключает защиту цели</div>
+                        <div class="item-price" id="virus-price">200</div>
+                        <div class="item-count" id="virus-count">0</div>
+                    </div>
+
+                    <div class="shop-item" onclick="buyItem('overload')">
+                        <div class="item-icon">⚡</div>
+                        <div class="item-name">ПЕРЕГРУЗКА</div>
+                        <div class="item-desc">x2 урона</div>
+                        <div class="item-price" id="overload-price">300</div>
+                        <div class="item-count" id="overload-count">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Статистика арены -->
+            <div class="arena-stats">
+                <div class="stat-item">
+                    <span>🏆 ПОБЕД:</span>
+                    <span class="stat-value" id="arena-wins">0</span>
+                </div>
+                <div class="stat-item">
+                    <span>💔 ПОРАЖЕНИЙ:</span>
+                    <span class="stat-value" id="arena-losses">0</span>
+                </div>
+                <div class="stat-item">
+                    <span>💰 ВЫИГРАНО:</span>
+                    <span class="stat-value" id="arena-won">0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ТАБЛИЦА ЛИДЕРОВ (ТОП-50) -->
+        <div id="leaderboard-mode" class="hidden">
+            <div class="leaderboard-header">
+                <span>🏆 ТОП-50 ЛУЧШИХ ХАКЕРОВ 🏆</span>
+            </div>
+
+            <!-- Поиск по имени -->
+            <div class="leaderboard-search">
+                <input type="text" id="search-player" placeholder="🔍 ПОИСК ХАКЕРА..." oninput="searchLeaderboard()">
+            </div>
+
+            <!-- Статистика игрока -->
+            <div class="player-stats-card" id="player-stats-card">
+                <div class="player-stat-title">ТВОЯ СТАТИСТИКА</div>
+                <div class="player-stat-row">
+                    <span>Telegram:</span>
+                    <span id="player-name-display">Загрузка...</span>
+                </div>
+                <div class="player-stat-row">
+                    <span>Ранг:</span>
+                    <span id="player-rank-display">#???</span>
+                </div>
+                <div class="player-stat-row">
+                    <span>Биткоины:</span>
+                    <span id="player-btc-display">0</span>
+                </div>
+                <div class="player-stat-row">
+                    <span>Уровень:</span>
+                    <span id="player-level-display">1</span>
+                </div>
+                <div class="player-stat-row">
+                    <span>Взломано:</span>
+                    <span id="player-servers-display">0</span>
+                </div>
+                <div class="player-stat-row">
+                    <span>Побед в арене:</span>
+                    <span id="player-wins-display">0</span>
+                </div>
+            </div>
+
+            <!-- Таблица лидеров -->
+            <div class="leaderboard-table">
+                <div class="leaderboard-row header">
+                    <div class="rank">#</div>
+                    <div class="name">ХАКЕР</div>
+                    <div class="level">УР</div>
+                    <div class="servers">💻</div>
+                    <div class="wins">⚔️</div>
+                    <div class="btc">💰</div>
+                </div>
+                <div id="leaderboard-rows">
+                    <!-- Здесь будут строки таблицы -->
+                    <div class="leaderboard-row">
+                        <div class="rank" colspan="6">Загрузка...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Информация о топе -->
+            <div class="leaderboard-footer">
+                <span>🏆 ТОП-50 обновляется автоматически</span>
+            </div>
+        </div>
+
+        <!-- Модальное окно для неудачного взлома -->
+        <div id="fail-modal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-icon">🚨</div>
+                <div class="modal-title">ВАС ЗАСЕКЛИ!</div>
+                <div class="modal-text" id="fail-message">Система безопасности обнаружила взлом</div>
+                <div class="modal-stats">
+                    <div class="modal-stat">
+                        <span>💰 Потеряно:</span>
+                        <span class="stat-value" id="fail-loss">0 BTC</span>
+                    </div>
+                    <div class="modal-stat">
+                        <span>🛡️ Щит безопасности:</span>
+                        <span class="stat-value" id="fail-shield">0%</span>
+                    </div>
+                </div>
+                <button class="modal-button" onclick="closeFailModal()">ПОНЯЛ</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="leaderboard.js"></script>
+    <script src="game.js"></script>
+</body>
+</html>
