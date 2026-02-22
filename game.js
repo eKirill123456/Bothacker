@@ -48,21 +48,6 @@ let currentBet = 500;
 let currentTarget = null;
 let isHacking = false;
 
-// Инвентарь арены
-let arenaInventory = {
-    firewall: 0,
-    exploit: 0,
-    virus: 0,
-    overload: 0
-};
-
-const shopPrices = {
-    firewall: 100,
-    exploit: 150,
-    virus: 200,
-    overload: 300
-};
-
 // Настройки сложности
 const difficultySettings = {
     easy: {
@@ -116,7 +101,7 @@ function updatePlayerStats() {
     window.leaderboardAPI.updatePlayerStats(
         playerId,
         playerName,
-        calculateHackPower(), // Используем мощность как уровень
+        calculateHackPower(),
         serversHacked,
         arenaWins,
         Math.floor(bitcoins)
@@ -404,12 +389,6 @@ function updateUI() {
     
     const arenaWonEl = document.getElementById('arena-won');
     if (arenaWonEl) arenaWonEl.textContent = arenaTotalWon;
-    
-    // Инвентарь арены
-    for (let item in arenaInventory) {
-        const countElement = document.getElementById(`${item}-count`);
-        if (countElement) countElement.textContent = arenaInventory[item];
-    }
     
     // Обновляем прогресс бар
     const progressFill = document.getElementById('progress-fill');
@@ -738,43 +717,18 @@ function startHackProcess() {
     
     log.innerHTML = '> Инициализация взлома...';
     
-    let defense = currentTarget.defense;
-    let powerMultiplier = 1;
-    
-    if (arenaInventory.virus > 0) {
-        arenaInventory.virus--;
-        defense = 0;
-        log.innerHTML += '<br>🦠 Вирус отключил защиту цели!';
-    }
-    
-    if (arenaInventory.exploit > 0) {
-        arenaInventory.exploit--;
-        powerMultiplier *= 1.3;
-        log.innerHTML += '<br>💻 Эксплоит усилил атаку!';
-    }
-    
-    if (arenaInventory.firewall > 0) {
-        arenaInventory.firewall--;
-        defense = Math.max(0, defense - 2);
-        log.innerHTML += '<br>🛡️ Файрвол ослабил защиту!';
-    }
-    
-    if (arenaInventory.overload > 0) {
-        arenaInventory.overload--;
-        powerMultiplier *= 2;
-        log.innerHTML += '<br>⚡ Перегрузка активирована!';
-    }
-    
+    // Рассчитываем шанс успеха (только на основе сложности и мощности)
     let successChance = settings.chance;
-    successChance += (powerLevel * 0.01);
-    successChance -= (defense * 0.05);
+    successChance += (powerLevel * 0.01); // +1% за уровень мощности
+    successChance -= (currentTarget.defense * 0.05); // -5% за единицу защиты
     successChance = Math.max(0.1, Math.min(0.95, successChance));
     
-    let attackPower = calculateHackPower() * powerMultiplier;
+    let attackPower = calculateHackPower();
     
     log.innerHTML += `<br>> Шанс успеха: ${Math.round(successChance * 100)}%`;
-    log.innerHTML += `<br>> Сила атаки: ${Math.round(attackPower)} vs Защита: ${defense}`;
+    log.innerHTML += `<br>> Сила атаки: ${attackPower} vs Защита: ${currentTarget.defense}`;
     
+    // Запускаем фазы
     let currentPhase = 0;
     
     function nextPhase() {
@@ -796,14 +750,14 @@ function startHackProcess() {
             
             currentPhase++;
         } else {
-            setTimeout(() => finishArenaHack(successChance, attackPower, defense), 500);
+            setTimeout(() => finishArenaHack(successChance), 500);
         }
     }
     
     nextPhase();
 }
 
-function finishArenaHack(successChance, attackPower, defensePower) {
+function finishArenaHack(successChance) {
     const settings = difficultySettings[currentDifficulty];
     const log = document.getElementById('hack-log');
     const container = document.getElementById('game-container');
@@ -829,13 +783,6 @@ function finishArenaHack(successChance, attackPower, defensePower) {
         }
         
         addMessage(`✅ Победа на арене! +${reward} BTC`);
-        
-        if (Math.random() < 0.2) {
-            const items = ['firewall', 'exploit', 'virus', 'overload'];
-            const item = items[Math.floor(Math.random() * items.length)];
-            arenaInventory[item]++;
-            if (log) log.innerHTML += `<br>📦 Найден предмет: ${item}!`;
-        }
     } else {
         arenaLosses++;
         
@@ -864,25 +811,6 @@ function finishArenaHack(successChance, attackPower, defensePower) {
         isHacking = false;
         generateTarget();
     }, 2000);
-}
-
-function buyItem(item) {
-    const price = shopPrices[item];
-    
-    if (bitcoins >= price) {
-        if (arenaInventory[item] >= 5) {
-            addMessage('❌ Можно иметь только 5 предметов этого типа!');
-            return;
-        }
-        
-        bitcoins -= price;
-        arenaInventory[item]++;
-        
-        addMessage(`✅ Куплен ${item}`);
-        updateUI();
-    } else {
-        addMessage('❌ Недостаточно биткоинов!');
-    }
 }
 
 // ============ ПАССИВНЫЙ ДОХОД ============
@@ -921,7 +849,6 @@ setInterval(() => {
         arenaWins,
         arenaLosses,
         arenaTotalWon,
-        arenaInventory,
         totalCaught,
         totalLost
     };
