@@ -1,32 +1,6 @@
 
 
 <!DOCTYPE html>
-const TelegramBot = require('node-telegram-bot-api');
-
-// Вставь свой токен от BotFather
-const token = '8061075309:AAHaf0fgYV-3LY81YQXpQwtmhTg0EjIgQNw';
-const bot = new TelegramBot(token, { polling: true });
-
-// Вставь ссылку на свою игру с GitHub Pages
-const gameUrl = 'https://ekirill123456.github.io/Bothacker/';
-
-bot.onText(/\/start/, (msg) => {
-    bot.sendMessage(msg.chat.id, 
-        '🔴 **HACKER TERMINAL**\n\n' +
-        'Добро пожаловать в игру про хакеров!\n\n' +
-        '👇 Нажми кнопку чтобы начать!',
-        {
-            parse_mode: 'Markdown',
-            reply_markup: {
-                inline_keyboard: [
-                    [{ text: '🎮 ЗАПУСТИТЬ ИГРУ', web_app: { url: gameUrl } }]
-                ]
-            }
-        }
-    );
-});
-
-console.log('Бот запущен!');
 
 
 <html lang="ru">
